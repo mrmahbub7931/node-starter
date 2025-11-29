@@ -14,7 +14,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
-      - nikash-saas_default
+      - nikash
     restart: unless-stopped
 
   mysql:
@@ -28,7 +28,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - nikash-saas_default
+      - nikash
     restart: unless-stopped
 
   adminer:
@@ -39,7 +39,7 @@ services:
       - "traefik.http.routers.adminer.rule=Host(`adminer.local.nikash`)"
       - "traefik.http.routers.adminer.entrypoints=web"
     networks:
-      - nikash-saas_default
+      - nikash
     restart: unless-stopped
 
   backend:
@@ -49,12 +49,16 @@ services:
     container_name: nikash-saas-backend
     env_file:
       - ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev"]  # nodemon dev
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`api.local.nikash`)"
       - "traefik.http.routers.backend.entrypoints=web"
     networks:
-      - nikash-saas_default
+      - nikash
     restart: unless-stopped
 
   frontend:
@@ -64,17 +68,29 @@ services:
     container_name: nikash-saas-frontend
     env_file:
       - ./frontend/.env
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev", "--", "--host"]
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`app.local.nikash`)"
       - "traefik.http.routers.frontend.entrypoints=web"
+
+      # Tell Traefik to use THIS service
+      - "traefik.http.routers.frontend.service=frontend"
+
+      # Tell Traefik which port the container exposes (Vite)
+      - "traefik.http.services.frontend.loadbalancer.server.port=5173"
     networks:
-      - nikash-saas_default
+      - nikash
     restart: unless-stopped
 
 volumes:
   mysql_data:
 
+
 networks:
-  nikash-saas_default:
+  nikash:
+    name: nikash
     driver: bridge

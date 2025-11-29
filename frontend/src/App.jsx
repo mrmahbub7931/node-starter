@@ -1,16 +1,24 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { use, useEffect, useState } from 'react'
+import apiClient from './api/connect'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    apiClient.get('/status')
+      .then(response => {
+        
+        setMsg(response.data.message);
+      })
+      .catch(error => {
+        console.error('There was an error!', error);
+      });
+  }, []);
 
   return (
     <>
-      <div style={{ textAlign: 'center', marginTop: '50px' }}>
-        <h1>Hello World from SaaS Frontend!</h1>
-        <p>Your React dashboard will start here.</p>
+      <div className='text-center mt-20'>
+        <h1 className='text-3xl text-red-600'>{msg}</h1>
       </div>
     </>
   )

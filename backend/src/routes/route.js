@@ -8,7 +8,7 @@ router.get('/', (req, res) => {
 
 // Sample route
 router.get('/status', (req, res) => {
-  res.json({ status: 'API is running smoothly!' });
+  res.json({ message: 'API is running smoothly!' });
 });
 
 module.exports = router;
