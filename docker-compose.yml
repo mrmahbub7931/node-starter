@@ -29,6 +29,8 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - nikash
+    ports:
+      - "3306:3306"
     restart: unless-stopped
 
   adminer:
@@ -42,25 +44,51 @@ services:
       - nikash
     restart: unless-stopped
 
-  backend:
+  api:
     build:
-      context: ./backend
+      context: ./api
       dockerfile: Dockerfile
-    container_name: nikash-saas-backend
+    container_name: nikash-saas-api
     env_file:
-      - ./backend/.env
+      - ./api/.env.docker
     volumes:
-      - ./backend:/app
-      - /app/node_modules
-    command: ["npm", "run", "dev"]  # nodemon dev
+      - ./api/src:/app/src          # only source code live reload
+      - ./api/prisma:/app/prisma    # ok to mount schema
+      - /app/node_modules           # prevent overriding node_modules
+    command: ["npm", "run", "dev"]
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`api.local.nikash`)"
       - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
     networks:
       - nikash
     restart: unless-stopped
 
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: nikash-saas-admin
+    env_file:
+      - ./admin/.env
+    volumes:
+      - ./admin:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev", "--", "--host"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.admin.rule=Host(`admin.local.nikash`)"
+      - "traefik.http.routers.admin.entrypoints=web"
+      # Tell Traefik to use THIS service
+      - "traefik.http.routers.admin.service=admin"
+      # Tell Traefik which port the container exposes (Vite)
+      - "traefik.http.services.admin.loadbalancer.server.port=3002"
+    networks:
+      - nikash
+    restart: unless-stopped
+    
   frontend:
     build:
       context: ./frontend
@@ -81,7 +109,7 @@ services:
       - "traefik.http.routers.frontend.service=frontend"
 
       # Tell Traefik which port the container exposes (Vite)
-      - "traefik.http.services.frontend.loadbalancer.server.port=5173"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3003"
     networks:
       - nikash
     restart: unless-stopped
