@@ -1,15 +1,8 @@
-import './App.css'
+import { RouterProvider } from "react-router-dom";
+import AppRouter from "./routes/AppRouter";
 
-function App() {
+const App = () => {
+  return <RouterProvider router={AppRouter} />;
+};
 
-  return (
-    <>
-      
-      <p className="text-3xl text-blue-600 mt-20 text-center font-bold">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
-
-export default App
+export default App;
