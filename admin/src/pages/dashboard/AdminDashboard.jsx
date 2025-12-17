@@ -1,5 +1,14 @@
+import {useAuth} from "../../context/AuthContext";
+
 const AdminDashboard = () => {
-    return <div>Admin Dashboard</div>;
+    const {logout} = useAuth();
+
+    return (
+        <>
+            <div>Admin Dashboard</div>
+            <button onClick={logout}>Logout</button>
+        </>
+    );
 };
 
 export default AdminDashboard;
